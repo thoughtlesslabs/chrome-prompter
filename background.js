@@ -43,41 +43,105 @@ async function createOrFocusPopup() {
 // Listen for keyboard shortcuts
 chrome.commands.onCommand.addListener(async (command) => {
   if (command === 'toggle-teleprompter') {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
+    try {
+      // Get the active tab in the current window
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tabs || tabs.length === 0 || !tabs[0].id) {
+        console.log('No active tab found');
+        return;
+      }
+      
+      const tab = tabs[0];
+      
+      // Check if tab is still valid
       try {
-        // First check if the content script is already injected
-        let contentScriptLoaded = false;
+        await chrome.tabs.get(tab.id);
+      } catch (error) {
+        console.log('Tab no longer exists:', error);
+        return;
+      }
+      
+      // Verify tab is in a state where we can inject scripts
+      if (tab.status !== 'complete' || !tab.url || tab.url.startsWith('chrome://')) {
+        console.log('Tab not ready for content script injection');
+        return;
+      }
+      
+      // First check if the content script is already injected
+      let contentScriptLoaded = false;
+      try {
+        contentScriptLoaded = await new Promise((resolve) => {
+          const timeout = setTimeout(() => {
+            resolve(false);
+          }, 300); // Increased timeout for better reliability
+          
+          chrome.tabs.sendMessage(tab.id, { action: 'ping' }, (response) => {
+            clearTimeout(timeout);
+            if (chrome.runtime.lastError) {
+              console.log('Ping error (expected if content script not loaded):', chrome.runtime.lastError.message);
+              resolve(false);
+              return;
+            }
+            resolve(response && response.success === true);
+          });
+        });
+      } catch (error) {
+        console.log('Error checking content script:', error);
+        contentScriptLoaded = false;
+      }
+      
+      if (!contentScriptLoaded) {
         try {
-          await chrome.tabs.sendMessage(tab.id, { action: 'ping' });
-          contentScriptLoaded = true;
-        } catch {
-          // Content script not injected yet
-          contentScriptLoaded = false;
-        }
-        
-        if (!contentScriptLoaded) {
           // Inject the content script
           await chrome.scripting.executeScript({
             target: { tabId: tab.id },
             files: ['content.js']
           });
+          
+          // Give the content script a moment to initialize
+          await new Promise(resolve => setTimeout(resolve, 50));
+        } catch (error) {
+          console.error('Failed to inject content script:', error);
+          return;
         }
-        
-        // Send the toggle command
-        await chrome.tabs.sendMessage(tab.id, { action: 'toggleTeleprompter' });
-      } catch (error) {
-        console.error('Failed to execute script or send message:', error);
       }
+      
+      // Send the toggle command
+      chrome.tabs.sendMessage(tab.id, { action: 'toggleTeleprompter' }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.log('Error toggling teleprompter:', chrome.runtime.lastError.message);
+          return;
+        }
+      });
+    } catch (error) {
+      console.error('Error in toggle-teleprompter command:', error);
     }
   } else if (command === 'increase-speed' || command === 'decrease-speed') {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab?.id) {
-      try {
-        await chrome.tabs.sendMessage(tab.id, { action: command });
-      } catch (error) {
-        console.error('Failed to send message:', error);
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tabs || tabs.length === 0 || !tabs[0].id) {
+        console.log('No active tab found');
+        return;
       }
+      
+      const tab = tabs[0];
+      
+      // Check if tab is still valid
+      try {
+        await chrome.tabs.get(tab.id);
+      } catch (error) {
+        console.log('Tab no longer exists:', error);
+        return;
+      }
+      
+      chrome.tabs.sendMessage(tab.id, { action: command }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.log(`Error changing speed (${command}):`, chrome.runtime.lastError.message);
+          return;
+        }
+      });
+    } catch (error) {
+      console.error(`Error in ${command} command:`, error);
     }
   }
 });
@@ -87,4 +151,18 @@ chrome.windows.onRemoved.addListener((windowId) => {
   if (windowId === popupWindowId) {
     popupWindowId = null;
   }
+});
+
+// Add proper message listener
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Handle any messages from popup or content script
+  if (message.action === 'toggleTeleprompter') {
+    // Handle toggle action
+    sendResponse({ success: true });
+    return false;
+  }
+  
+  // Always send a response for any unhandled messages
+  sendResponse({ success: true });
+  return false;
 }); 
