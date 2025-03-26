@@ -54,38 +54,63 @@ function scroll() {
 // Create floating UI controls
 function createControlPanel() {
   if (controlPanel) {
-    controlPanel.style.display = 'block';
+    controlPanel.style.display = 'flex';
     uiVisible = true;
     return;
   }
+
+  // Detect OS for correct keyboard shortcuts
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+  const modifierKey = isMac ? '⌘' : 'Ctrl';
 
   // Create panel
   controlPanel = document.createElement('div');
   controlPanel.id = 'chrome-prompter-controls';
   controlPanel.style.cssText = `
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 0;
+    left: 0;
+    right: 0;
     background: white;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 15px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    border-bottom: 1px solid #ccc;
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     z-index: 9999;
     font-family: Arial, sans-serif;
-    width: 250px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   `;
 
-  // Add controls
+  // Create left section for shortcuts
+  const shortcutsSection = document.createElement('div');
+  shortcutsSection.style.cssText = 'display: flex; align-items: center; gap: 15px; font-size: 12px;';
+  
+  // Add keyboard shortcut info
+  shortcutsSection.innerHTML = `
+    <div>
+      <kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">${modifierKey}</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Shift</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">P</kbd> Toggle
+    </div>
+    <div>
+      <kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">${modifierKey}</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Shift</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">↑/↓</kbd> Speed
+    </div>
+  `;
+  
+  // Create middle section for controls
+  const controlsSection = document.createElement('div');
+  controlsSection.style.cssText = 'display: flex; align-items: center; gap: 15px; justify-content: center; flex-grow: 1;';
+  
+  // Toggle button
   const toggleBtn = document.createElement('button');
   toggleBtn.textContent = scrollState.isScrolling ? 'Pause' : 'Start';
-  toggleBtn.style.cssText = 'width: 100%; padding: 8px; margin-bottom: 10px; cursor: pointer;';
+  toggleBtn.style.cssText = 'padding: 8px 15px; cursor: pointer; font-weight: bold;';
   toggleBtn.addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'toggleTeleprompter' });
   });
-
+  
+  // Speed controls
   const speedControls = document.createElement('div');
-  speedControls.style.cssText = 'display: flex; align-items: center; gap: 10px; margin-bottom: 15px;';
+  speedControls.style.cssText = 'display: flex; align-items: center; gap: 10px;';
   
   const speedLabel = document.createElement('span');
   speedLabel.textContent = 'Speed:';
@@ -111,26 +136,15 @@ function createControlPanel() {
     updateSpeedDisplay();
   });
   
+  // Create right section for close button
+  const closeSection = document.createElement('div');
+  
   const closeBtn = document.createElement('button');
   closeBtn.textContent = 'Close';
-  closeBtn.style.cssText = 'width: 100%; padding: 8px; cursor: pointer;';
+  closeBtn.style.cssText = 'padding: 8px 15px; cursor: pointer;';
   closeBtn.addEventListener('click', () => {
-    controlPanel.style.display = 'none';
-    uiVisible = false;
+    hideControlPanel();
   });
-  
-  // Add keyboard shortcut info
-  const shortcuts = document.createElement('div');
-  shortcuts.style.cssText = 'margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 12px;';
-  shortcuts.innerHTML = `
-    <h3 style="margin-top: 0; font-size: 14px;">Keyboard Shortcuts:</h3>
-    <ul style="margin: 0; padding-left: 20px;">
-      <li><kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Ctrl</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Shift</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">P</kbd> - Toggle scrolling</li>
-      <li><kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Ctrl</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Shift</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">↑</kbd> - Increase speed</li>
-      <li><kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Ctrl</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Shift</kbd>+<kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">↓</kbd> - Decrease speed</li>
-      <li>Mac users: Replace <kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">Ctrl</kbd> with <kbd style="background: #f5f5f5; border: 1px solid #ccc; border-radius: 3px; padding: 2px 5px;">⌘</kbd></li>
-    </ul>
-  `;
   
   // Assemble everything
   speedControls.appendChild(speedLabel);
@@ -138,12 +152,22 @@ function createControlPanel() {
   speedControls.appendChild(speedDisplay);
   speedControls.appendChild(increaseBtn);
   
-  controlPanel.appendChild(toggleBtn);
-  controlPanel.appendChild(speedControls);
-  controlPanel.appendChild(closeBtn);
-  controlPanel.appendChild(shortcuts);
+  controlsSection.appendChild(toggleBtn);
+  controlsSection.appendChild(speedControls);
+  
+  closeSection.appendChild(closeBtn);
+  
+  controlPanel.appendChild(shortcutsSection);
+  controlPanel.appendChild(controlsSection);
+  controlPanel.appendChild(closeSection);
   
   document.body.appendChild(controlPanel);
+
+  // Add padding to body to prevent content from going under the control panel
+  const originalBodyPadding = window.getComputedStyle(document.body).paddingTop;
+  document.body._originalPadding = originalBodyPadding;
+  document.body.style.paddingTop = `${controlPanel.offsetHeight + 10}px`;
+  
   uiVisible = true;
 }
 
@@ -167,11 +191,22 @@ function updateControlPanel() {
   }
 }
 
-// Toggle UI visibility
+// Update the hideControlPanel function to restore original body padding
+function hideControlPanel() {
+  if (controlPanel) {
+    controlPanel.style.display = 'none';
+    // Restore original padding
+    if (document.body._originalPadding !== undefined) {
+      document.body.style.paddingTop = document.body._originalPadding;
+    }
+    uiVisible = false;
+  }
+}
+
+// Update toggleControlPanelVisibility to use the new hide function
 function toggleControlPanelVisibility() {
   if (uiVisible) {
-    controlPanel.style.display = 'none';
-    uiVisible = false;
+    hideControlPanel();
   } else {
     createControlPanel();
   }
