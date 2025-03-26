@@ -274,6 +274,10 @@
       border-radius: 4px;
     `;
     closeBtn.addEventListener('click', () => {
+      // Stop scrolling if it's active before hiding the panel
+      if (scrollState.isScrolling) {
+        stopScrolling();
+      }
       hideControlPanel();
       resetUIFadeTimer();
     });
