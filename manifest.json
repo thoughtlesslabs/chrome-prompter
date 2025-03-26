@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Chrome Prompter",
     "version": "1.0",
-    "description": "A teleprompter extension that enables smooth auto-scrolling on any webpage",
+    "description": "Auto-scrolls any webpage for hands-free reading — just like a teleprompter.",
     "permissions": [
         "activeTab",
         "scripting",
