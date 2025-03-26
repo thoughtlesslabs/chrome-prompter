@@ -1,0 +1,43 @@
+{
+    "manifest_version": 3,
+    "name": "Chrome Prompter",
+    "version": "1.0",
+    "description": "A teleprompter extension that enables smooth auto-scrolling on any webpage",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "tabs"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_title": "Chrome Prompter"
+    },
+    "commands": {
+        "toggle-teleprompter": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+P",
+                "mac": "Command+Shift+P"
+            },
+            "description": "Toggle teleprompter scrolling"
+        },
+        "increase-speed": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+Up",
+                "mac": "Command+Shift+Up"
+            },
+            "description": "Increase scroll speed"
+        },
+        "decrease-speed": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+Down",
+                "mac": "Command+Shift+Down"
+            },
+            "description": "Decrease scroll speed"
+        }
+    }
+}
