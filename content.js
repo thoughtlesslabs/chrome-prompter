@@ -7,12 +7,12 @@
   // Configuration
   const BASE_SCROLL_SPEED = 0.5; // Reduced base speed
   const SCROLL_INTERVAL = 16; // ~60fps for smoother animation
+  const UI_FADE_DELAY = 3000; // 3 seconds before UI fades
 
   // State management
   let scrollState = {
     isScrolling: false,
     intervalId: null,
-    pressCount: 0,
     selectedText: null,
     currentPosition: 0,
     speedMultiplier: 1
@@ -21,6 +21,7 @@
   // UI state
   let uiVisible = false;
   let controlPanel = null;
+  let uiFadeTimer = null;
 
   // Get color scheme based on system preference
   function getColorScheme() {
@@ -71,16 +72,74 @@
     if (scrollState.currentPosition >= container.scrollHeight - window.innerHeight) {
       clearInterval(scrollState.intervalId);
       scrollState.isScrolling = false;
-      scrollState.pressCount = 0;
       updateControlPanel();
     }
+  }
+
+  // Function to start scrolling
+  function startScrolling() {
+    if (!scrollState.isScrolling) {
+      scrollState.isScrolling = true;
+      scrollState.currentPosition = window.scrollY;
+      scrollState.intervalId = setInterval(scroll, SCROLL_INTERVAL);
+      updateControlPanel();
+    }
+  }
+
+  // Function to stop scrolling
+  function stopScrolling() {
+    if (scrollState.isScrolling) {
+      clearInterval(scrollState.intervalId);
+      scrollState.isScrolling = false;
+      updateControlPanel();
+    }
+  }
+
+  // Toggle scrolling state
+  function toggleScrolling() {
+    if (scrollState.isScrolling) {
+      stopScrolling();
+    } else {
+      startScrolling();
+    }
+  }
+
+  // Function to set UI opacity
+  function setUIOpacity(opacity) {
+    if (controlPanel) {
+      controlPanel.style.opacity = opacity;
+    }
+  }
+
+  // Function to reset the UI fade timer
+  function resetUIFadeTimer() {
+    // Clear existing timer
+    if (uiFadeTimer) {
+      clearTimeout(uiFadeTimer);
+    }
+    
+    // Set UI to full opacity
+    setUIOpacity(1);
+    
+    // Set new timer
+    uiFadeTimer = setTimeout(() => {
+      setUIOpacity(0.15); // 15% opacity
+    }, UI_FADE_DELAY);
   }
 
   // Create floating UI controls
   function createControlPanel() {
     if (controlPanel) {
-      controlPanel.style.display = 'flex';
+      controlPanel.style.display = 'block';
+      controlPanel.style.opacity = '0';
+      
+      // Ensure smooth animation by using setTimeout
+      setTimeout(() => {
+        controlPanel.style.opacity = '1';
+      }, 10);
+      
       uiVisible = true;
+      resetUIFadeTimer();
       return;
     }
 
@@ -106,10 +165,21 @@
       box-shadow: 0 2px 5px ${colors.shadow};
       z-index: 9999;
       font-family: Arial, sans-serif;
+      display: block;
+      justify-content: space-between;
+      align-items: center;
+      transition: opacity 0.3s ease;
+      opacity: 0;
+    `;
+
+    // Create container for better layout
+    const contentContainer = document.createElement('div');
+    contentContainer.style.cssText = `
       display: flex;
       justify-content: space-between;
       align-items: center;
     `;
+    controlPanel.appendChild(contentContainer);
 
     // Create left section for shortcuts
     const shortcutsSection = document.createElement('div');
@@ -131,7 +201,7 @@
     
     // Toggle button
     const toggleBtn = document.createElement('button');
-    toggleBtn.textContent = scrollState.isScrolling ? 'Pause' : 'Start';
+    toggleBtn.textContent = scrollState.isScrolling ? 'Stop' : 'Start';
     toggleBtn.style.cssText = `
       padding: 8px 15px;
       cursor: pointer;
@@ -142,7 +212,8 @@
       border-radius: 4px;
     `;
     toggleBtn.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'toggleTeleprompter' });
+      toggleScrolling();
+      resetUIFadeTimer();
     });
     
     // Speed controls
@@ -165,6 +236,7 @@
     decreaseBtn.addEventListener('click', () => {
       scrollState.speedMultiplier = Math.max(scrollState.speedMultiplier - 0.25, 0.25);
       updateSpeedDisplay();
+      resetUIFadeTimer();
     });
     
     const speedDisplay = document.createElement('span');
@@ -185,6 +257,7 @@
     increaseBtn.addEventListener('click', () => {
       scrollState.speedMultiplier = Math.min(scrollState.speedMultiplier + 0.25, 3);
       updateSpeedDisplay();
+      resetUIFadeTimer();
     });
     
     // Create right section for close button
@@ -202,6 +275,7 @@
     `;
     closeBtn.addEventListener('click', () => {
       hideControlPanel();
+      resetUIFadeTimer();
     });
     
     // Assemble everything
@@ -215,20 +289,34 @@
     
     closeSection.appendChild(closeBtn);
     
-    controlPanel.appendChild(shortcutsSection);
-    controlPanel.appendChild(controlsSection);
-    controlPanel.appendChild(closeSection);
+    contentContainer.appendChild(shortcutsSection);
+    contentContainer.appendChild(controlsSection);
+    contentContainer.appendChild(closeSection);
     
-    document.body.appendChild(controlPanel);
-
-    // Add padding to body to prevent content from going under the control panel
-    const originalBodyPadding = window.getComputedStyle(document.body).paddingTop;
-    document.body._originalPadding = originalBodyPadding;
-    document.body.style.paddingTop = `${controlPanel.offsetHeight + 10}px`;
+    // Insert at the beginning of body
+    document.body.insertBefore(controlPanel, document.body.firstChild);
+    
+    // Animate in
+    setTimeout(() => {
+      controlPanel.style.opacity = '1';
+    }, 10);
     
     // Listen for changes in color scheme
     const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
     colorSchemeQuery.addEventListener('change', updateColorScheme);
+    
+    // Set up UI fade timer
+    resetUIFadeTimer();
+    
+    // Add mouse hover event to prevent UI from fading when hovered
+    controlPanel.addEventListener('mouseenter', () => {
+      setUIOpacity(1);
+      clearTimeout(uiFadeTimer);
+    });
+    
+    controlPanel.addEventListener('mouseleave', () => {
+      resetUIFadeTimer();
+    });
     
     uiVisible = true;
   }
@@ -248,7 +336,7 @@
     if (controlPanel) {
       const toggleBtn = controlPanel.querySelector('button');
       if (toggleBtn) {
-        toggleBtn.textContent = scrollState.isScrolling ? 'Pause' : 'Start';
+        toggleBtn.textContent = scrollState.isScrolling ? 'Stop' : 'Start';
       }
     }
   }
@@ -256,11 +344,14 @@
   // Update the hideControlPanel function to restore original body padding
   function hideControlPanel() {
     if (controlPanel) {
-      controlPanel.style.display = 'none';
-      // Restore original padding
-      if (document.body._originalPadding !== undefined) {
-        document.body.style.paddingTop = document.body._originalPadding;
-      }
+      // Animate out
+      controlPanel.style.opacity = '0';
+      
+      // Remove after animation completes
+      setTimeout(() => {
+        controlPanel.style.display = 'none';
+      }, 300);
+      
       uiVisible = false;
     }
   }
@@ -310,41 +401,20 @@
       return false; // Not using asynchronous response
     }
     
+    // Reset fade timer for any message action
+    resetUIFadeTimer();
+    
+    // Always show the control panel when receiving keyboard shortcut messages
+    if (message.action === 'toggleTeleprompter' || 
+        message.action === 'increase-speed' || 
+        message.action === 'decrease-speed') {
+      // Make sure UI is visible when shortcuts are used
+      createControlPanel();
+    }
+    
     if (message.action === 'toggleTeleprompter') {
-      scrollState.pressCount = (scrollState.pressCount + 1) % 4;
-      
-      switch (scrollState.pressCount) {
-        case 1: // Start scrolling
-          if (!scrollState.isScrolling) {
-            scrollState.isScrolling = true;
-            scrollState.currentPosition = window.scrollY;
-            scrollState.intervalId = setInterval(scroll, SCROLL_INTERVAL);
-            createControlPanel(); // Show UI when starting
-          }
-          break;
-          
-        case 2: // Pause
-          if (scrollState.isScrolling) {
-            clearInterval(scrollState.intervalId);
-            scrollState.isScrolling = false;
-          }
-          break;
-          
-        case 3: // Resume
-          if (!scrollState.isScrolling) {
-            scrollState.isScrolling = true;
-            scrollState.intervalId = setInterval(scroll, SCROLL_INTERVAL);
-          }
-          break;
-          
-        case 0: // Stop and reset
-          clearInterval(scrollState.intervalId);
-          scrollState.isScrolling = false;
-          scrollState.currentPosition = 0;
-          break;
-      }
-      
-      updateControlPanel();
+      // Simply toggle scrolling with one press
+      toggleScrolling();
       sendResponse({ success: true });
     } else if (message.action === 'increase-speed') {
       scrollState.speedMultiplier = Math.min(scrollState.speedMultiplier + 0.25, 3);
@@ -369,6 +439,26 @@
       scrollState.selectedText = selection.anchorNode.parentElement;
     } else {
       scrollState.selectedText = null;
+    }
+  });
+
+  // Keyboard event listener - ensure UI is shown when shortcuts are used
+  document.addEventListener('keydown', function(e) {
+    // Reset fade timer on any keypress
+    resetUIFadeTimer();
+    
+    // Check for our keyboard shortcuts
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
+      if (e.key === 'p' || e.key === 'P') {
+        // Make sure UI is visible
+        createControlPanel();
+      } else if (e.key === 'ArrowUp') {
+        // Make sure UI is visible
+        createControlPanel();
+      } else if (e.key === 'ArrowDown') {
+        // Make sure UI is visible
+        createControlPanel();
+      }
     }
   });
 
