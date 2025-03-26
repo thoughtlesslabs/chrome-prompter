@@ -7,12 +7,13 @@
   // Configuration
   const BASE_SCROLL_SPEED = 0.5; // Reduced base speed
   const SCROLL_INTERVAL = 16; // ~60fps for smoother animation
-  const UI_FADE_DELAY = 3000; // 3 seconds before UI fades
+  const UI_FADE_DELAY = 2000; // 3 seconds before UI fades
 
   // State management
   let scrollState = {
     isScrolling: false,
     intervalId: null,
+    pressCount: 0,
     selectedText: null,
     currentPosition: 0,
     speedMultiplier: 1
@@ -163,7 +164,7 @@
       border-bottom: 1px solid ${colors.border};
       padding: 10px 20px;
       box-shadow: 0 2px 5px ${colors.shadow};
-      z-index: 9999;
+      z-index: 2147483647;
       font-family: Arial, sans-serif;
       display: block;
       justify-content: space-between;
@@ -176,6 +177,7 @@
     const contentContainer = document.createElement('div');
     contentContainer.style.cssText = `
       display: flex;
+      width: 100%;
       justify-content: space-between;
       align-items: center;
     `;
@@ -300,18 +302,6 @@
     // Insert at the beginning of body
     document.body.insertBefore(controlPanel, document.body.firstChild);
     
-    // Animate in
-    setTimeout(() => {
-      controlPanel.style.opacity = '1';
-    }, 10);
-    
-    // Listen for changes in color scheme
-    const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    colorSchemeQuery.addEventListener('change', updateColorScheme);
-    
-    // Set up UI fade timer
-    resetUIFadeTimer();
-    
     // Add mouse hover event to prevent UI from fading when hovered
     controlPanel.addEventListener('mouseenter', () => {
       setUIOpacity(1);
@@ -321,6 +311,9 @@
     controlPanel.addEventListener('mouseleave', () => {
       resetUIFadeTimer();
     });
+    
+    // Set up UI fade timer
+    resetUIFadeTimer();
     
     uiVisible = true;
   }
