@@ -38,3 +38,6 @@ Thumbs.db
 
 # Backup
 backup/
+
+# upload files
+.amo-upload-uuid
