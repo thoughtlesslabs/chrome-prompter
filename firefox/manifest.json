@@ -1,9 +1,10 @@
 {
     "manifest_version": 3,
     "name": "Auto-Scroll Screen Prompter",
-    "version": "1.6",
+    "version": "1.7",
     "description": "Auto-scrolls any webpage for hands-free reading — just like a teleprompter.",
     "author": "thoughtlesslabs",
+    "license": "MIT",
     "permissions": [
         "activeTab",
         "scripting",
