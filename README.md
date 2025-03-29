@@ -1,42 +1,53 @@
 # Chrome Prompter
 
-A lightweight Chrome extension that turns any webpage into a teleprompter with smooth auto-scrolling functionality.
+A browser extension that auto-scrolls any webpage for hands-free reading — just like a teleprompter.
+
+## Folder Structure
+
+This repository contains two versions of the extension:
+
+- **chrome/** - Contains the Chrome version of the extension
+- **firefox/** - Contains the Firefox version of the extension
 
 ## Features
 
-- Smooth auto-scrolling on any webpage
-- Keyboard shortcut control (Cmd+Shift+T on Mac, Ctrl+Shift+T on Windows/Linux)
-- Four-state toggle: Start → Pause → Resume → Stop
-- Support for selected text scrolling
-- No UI clutter - works silently in the background
-- Works with most websites and content types
+- Auto-scrolling functionality with adjustable speed
+- Keyboard shortcuts for easy control
+- Minimal UI that fades when not in use
+- Works on any webpage
+
+## Chrome Version
+
+The Chrome version uses the following keyboard shortcuts:
+
+- **Ctrl+Shift+P** (Mac: **Cmd+Shift+P**): Toggle teleprompter
+- **Ctrl+Shift+Up** (Mac: **Cmd+Shift+Up**): Increase speed
+- **Ctrl+Shift+Down** (Mac: **Cmd+Shift+Down**): Decrease speed
+
+## Firefox Version
+
+The Firefox version uses different keyboard shortcuts to avoid conflicts with Firefox's built-in shortcuts:
+
+- **Alt+Shift+P**: Toggle teleprompter
+- **Alt+Shift+Up**: Increase speed
+- **Alt+Shift+Down**: Decrease speed
 
 ## Installation
 
-1. Clone or download this repository
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the extension directory
+### Chrome
 
-## Usage
+1. Download or clone this repository
+2. Open Chrome and go to `chrome://extensions`
+3. Enable "Developer mode"
+4. Click "Load unpacked" and select the `chrome` folder
 
-1. Navigate to any webpage with scrollable content
-2. (Optional) Select specific text to scroll only that section
-3. Press Cmd+Shift+T (Mac) or Ctrl+Shift+T (Windows/Linux) to:
-   - First press: Start scrolling
-   - Second press: Pause scrolling
-   - Third press: Resume scrolling
-   - Fourth press: Stop and reset
+### Firefox
 
-## Customization
+1. Download or clone this repository
+2. Open Firefox and go to `about:debugging`
+3. Click "This Firefox"
+4. Click "Load Temporary Add-on" and select any file in the `firefox` folder
 
-You can modify the scroll speed and interval by editing the constants in `content.js`:
+## License
 
-- `SCROLL_SPEED`: Pixels to scroll each time (default: 30)
-- `SCROLL_INTERVAL`: Milliseconds between scrolls (default: 500)
-
-## Notes
-
-- The extension works best with standard webpage layouts
-- Some websites with complex frames or dynamic content may have limited functionality
-- Sticky headers and fixed elements may affect scrolling behavior
+MIT
