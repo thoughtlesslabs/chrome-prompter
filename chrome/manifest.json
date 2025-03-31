@@ -13,18 +13,6 @@
     "background": {
         "service_worker": "background.js"
     },
-    "content_scripts": [
-        {
-            "matches": [
-                "http://*/*",
-                "https://*/*"
-            ],
-            "js": [
-                "content.js"
-            ],
-            "run_at": "document_start"
-        }
-    ],
     "commands": {
         "toggleTeleprompter": {
             "suggested_key": {
