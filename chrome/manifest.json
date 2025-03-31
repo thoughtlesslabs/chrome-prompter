@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Auto-Scroll Screen Prompter",
     "version": "1.0.1",
-    "description": "A simple screen prompter that automatically scrolls text for presentations, speeches, or reading. Features include adjustable speed, keyboard shortcuts, and dark mode support.",
+    "description": "Auto-scrolls text for presentations and reading. Features adjustable speed, keyboard shortcuts, and dark mode support.",
     "permissions": [
         "activeTab",
         "scripting",
