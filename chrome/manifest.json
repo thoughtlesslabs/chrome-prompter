@@ -5,11 +5,7 @@
     "description": "Auto-scrolls text for presentations and reading. Features adjustable speed, keyboard shortcuts, and dark mode support.",
     "permissions": [
         "activeTab",
-        "scripting",
-        "storage"
-    ],
-    "host_permissions": [
-        "<all_urls>"
+        "scripting"
     ],
     "action": {
         "default_popup": "popup.html"
