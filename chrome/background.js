@@ -12,7 +12,7 @@ async function createOrFocusPopup() {
 
   try {
     const [currentWindow] = await chrome.windows.getCurrent();
-    
+
     // Create popup window
     const popup = await chrome.windows.create({
       url: 'popup.html', // Simplified URL
@@ -23,7 +23,7 @@ async function createOrFocusPopup() {
       left: currentWindow.left + Math.floor(currentWindow.width * 0.7),
       top: currentWindow.top + 50
     });
-    
+
     popupWindowId = popup.id;
 
     // Update window to be on top but not focused
@@ -50,9 +50,9 @@ chrome.commands.onCommand.addListener(async (command) => {
         console.log('No active tab found');
         return;
       }
-      
+
       const tab = tabs[0];
-      
+
       // Check if tab is still valid
       try {
         await chrome.tabs.get(tab.id);
@@ -60,21 +60,21 @@ chrome.commands.onCommand.addListener(async (command) => {
         console.log('Tab no longer exists:', error);
         return;
       }
-      
+
       // Verify tab is in a state where we can inject scripts
       if (tab.status !== 'complete' || !tab.url || tab.url.startsWith('chrome://')) {
         console.log('Tab not ready for content script injection');
         return;
       }
-      
+
       // First check if the content script is already injected
       let contentScriptLoaded = false;
       try {
         contentScriptLoaded = await new Promise((resolve) => {
           const timeout = setTimeout(() => {
             resolve(false);
-          }, 300); // Increased timeout for better reliability
-          
+          }, 300);
+
           chrome.tabs.sendMessage(tab.id, { action: 'ping' }, (response) => {
             clearTimeout(timeout);
             if (chrome.runtime.lastError) {
@@ -89,7 +89,7 @@ chrome.commands.onCommand.addListener(async (command) => {
         console.log('Error checking content script:', error);
         contentScriptLoaded = false;
       }
-      
+
       if (!contentScriptLoaded) {
         try {
           // Inject the content script
@@ -97,7 +97,7 @@ chrome.commands.onCommand.addListener(async (command) => {
             target: { tabId: tab.id },
             files: ['content.js']
           });
-          
+
           // Give the content script a moment to initialize
           await new Promise(resolve => setTimeout(resolve, 50));
         } catch (error) {
@@ -105,12 +105,11 @@ chrome.commands.onCommand.addListener(async (command) => {
           return;
         }
       }
-      
+
       // Send the toggle command
       chrome.tabs.sendMessage(tab.id, { action: 'toggleTeleprompter' }, (response) => {
         if (chrome.runtime.lastError) {
           console.log('Error toggling teleprompter:', chrome.runtime.lastError.message);
-          return;
         }
       });
     } catch (error) {
@@ -123,9 +122,9 @@ chrome.commands.onCommand.addListener(async (command) => {
         console.log('No active tab found');
         return;
       }
-      
+
       const tab = tabs[0];
-      
+
       // Check if tab is still valid
       try {
         await chrome.tabs.get(tab.id);
@@ -133,11 +132,10 @@ chrome.commands.onCommand.addListener(async (command) => {
         console.log('Tab no longer exists:', error);
         return;
       }
-      
+
       chrome.tabs.sendMessage(tab.id, { action: command }, (response) => {
         if (chrome.runtime.lastError) {
           console.log(`Error changing speed (${command}):`, chrome.runtime.lastError.message);
-          return;
         }
       });
     } catch (error) {
@@ -159,10 +157,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'toggleTeleprompter') {
     // Handle toggle action
     sendResponse({ success: true });
-    return false;
+    return true; // Keep the message channel open for async response
   }
-  
+
   // Always send a response for any unhandled messages
   sendResponse({ success: true });
-  return false;
+  return true; // Keep the message channel open for async response
 }); 

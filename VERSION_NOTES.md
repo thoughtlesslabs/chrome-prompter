@@ -2,7 +2,7 @@
 
 ## Version 1.7 (Firefox) / Version 1.0 (Chrome)
 
-**Release Date: [Current Date]**
+**Release Date: 2025-03-29**
 
 ### New Features
 

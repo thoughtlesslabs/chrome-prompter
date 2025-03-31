@@ -1,13 +1,13 @@
 // Prevent multiple injections by using an IIFE
-(function() {
+(function () {
   // Only execute if we haven't already
   if (window._chromePrompterLoaded) return;
   window._chromePrompterLoaded = true;
-  
+
   // Configuration
   const BASE_SCROLL_SPEED = 0.5; // Reduced base speed
   const SCROLL_INTERVAL = 16; // ~60fps for smoother animation
-  const UI_FADE_DELAY = 2000; // 3 seconds before UI fades
+  const UI_FADE_DELAY = 2000; // 2 seconds before UI fades
 
   // State management
   let scrollState = {
@@ -27,7 +27,7 @@
   // Get color scheme based on system preference
   function getColorScheme() {
     const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
+
     return {
       background: isDarkMode ? '#333333' : 'white',
       text: isDarkMode ? '#ffffff' : '#333333',
@@ -49,12 +49,12 @@
     if (scrollState.selectedText) {
       return scrollState.selectedText;
     }
-    
+
     // Check if body is scrollable
     if (document.body.scrollHeight > document.body.clientHeight) {
       return document.body;
     }
-    
+
     // Fallback to documentElement
     return document.documentElement;
   }
@@ -63,7 +63,7 @@
   function scroll() {
     const container = getScrollableContainer();
     scrollState.currentPosition += (BASE_SCROLL_SPEED * scrollState.speedMultiplier);
-    
+
     window.scrollTo({
       top: scrollState.currentPosition,
       behavior: 'auto'
@@ -118,10 +118,10 @@
     if (uiFadeTimer) {
       clearTimeout(uiFadeTimer);
     }
-    
+
     // Set UI to full opacity
     setUIOpacity(1);
-    
+
     // Set new timer
     uiFadeTimer = setTimeout(() => {
       setUIOpacity(0.15); // 15% opacity
@@ -133,12 +133,12 @@
     if (controlPanel) {
       controlPanel.style.display = 'block';
       controlPanel.style.opacity = '0';
-      
+
       // Ensure smooth animation by using setTimeout
       setTimeout(() => {
         controlPanel.style.opacity = '1';
       }, 10);
-      
+
       uiVisible = true;
       resetUIFadeTimer();
       return;
@@ -147,7 +147,7 @@
     // Detect OS for correct keyboard shortcuts
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
     const modifierKey = isMac ? '⌘' : 'Ctrl';
-    
+
     // Get color scheme
     const colors = getColorScheme();
 
@@ -167,8 +167,6 @@
       z-index: 2147483647;
       font-family: Arial, sans-serif;
       display: block;
-      justify-content: space-between;
-      align-items: center;
       transition: opacity 0.3s ease;
       opacity: 0;
     `;
@@ -178,15 +176,18 @@
     contentContainer.style.cssText = `
       display: flex;
       width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
       justify-content: space-between;
       align-items: center;
+      position: relative;
     `;
     controlPanel.appendChild(contentContainer);
 
     // Create left section for shortcuts
     const shortcutsSection = document.createElement('div');
-    shortcutsSection.style.cssText = 'display: flex; align-items: center; gap: 15px; font-size: 12px;';
-    
+    shortcutsSection.style.cssText = 'display: flex; align-items: center; gap: 15px; font-size: 12px; position: absolute; left: 0;';
+
     // Add keyboard shortcut info
     shortcutsSection.innerHTML = `
       <div>
@@ -196,11 +197,11 @@
         <kbd style="background: ${colors.kbd.bg}; color: ${colors.kbd.text}; border: 1px solid ${colors.kbd.border}; border-radius: 3px; padding: 2px 5px;">${modifierKey}</kbd>+<kbd style="background: ${colors.kbd.bg}; color: ${colors.kbd.text}; border: 1px solid ${colors.kbd.border}; border-radius: 3px; padding: 2px 5px;">Shift</kbd>+<kbd style="background: ${colors.kbd.bg}; color: ${colors.kbd.text}; border: 1px solid ${colors.kbd.border}; border-radius: 3px; padding: 2px 5px;">↑/↓</kbd> Speed
       </div>
     `;
-    
+
     // Create middle section for controls
     const controlsSection = document.createElement('div');
-    controlsSection.style.cssText = 'display: flex; align-items: center; gap: 15px; justify-content: center; flex-grow: 1;';
-    
+    controlsSection.style.cssText = 'display: flex; align-items: center; gap: 15px; justify-content: center; flex-grow: 1; margin: 0 auto;';
+
     // Toggle button
     const toggleBtn = document.createElement('button');
     toggleBtn.textContent = scrollState.isScrolling ? 'Stop' : 'Start';
@@ -217,14 +218,14 @@
       toggleScrolling();
       resetUIFadeTimer();
     });
-    
+
     // Speed controls
     const speedControls = document.createElement('div');
     speedControls.style.cssText = 'display: flex; align-items: center; gap: 10px;';
-    
+
     const speedLabel = document.createElement('span');
     speedLabel.textContent = 'Speed:';
-    
+
     const decreaseBtn = document.createElement('button');
     decreaseBtn.textContent = '-';
     decreaseBtn.style.cssText = `
@@ -240,12 +241,12 @@
       updateSpeedDisplay();
       resetUIFadeTimer();
     });
-    
+
     const speedDisplay = document.createElement('span');
     speedDisplay.id = 'speed-value';
     speedDisplay.textContent = `${scrollState.speedMultiplier}x`;
     speedDisplay.style.cssText = 'min-width: 40px; text-align: center;';
-    
+
     const increaseBtn = document.createElement('button');
     increaseBtn.textContent = '+';
     increaseBtn.style.cssText = `
@@ -261,10 +262,11 @@
       updateSpeedDisplay();
       resetUIFadeTimer();
     });
-    
+
     // Create right section for close button
     const closeSection = document.createElement('div');
-    
+    closeSection.style.cssText = 'position: absolute; right: 0;';
+
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
     closeBtn.style.cssText = `
@@ -283,38 +285,38 @@
       hideControlPanel();
       resetUIFadeTimer();
     });
-    
+
     // Assemble everything
     speedControls.appendChild(speedLabel);
     speedControls.appendChild(decreaseBtn);
     speedControls.appendChild(speedDisplay);
     speedControls.appendChild(increaseBtn);
-    
+
     controlsSection.appendChild(toggleBtn);
     controlsSection.appendChild(speedControls);
-    
+
     closeSection.appendChild(closeBtn);
-    
+
     contentContainer.appendChild(shortcutsSection);
     contentContainer.appendChild(controlsSection);
     contentContainer.appendChild(closeSection);
-    
+
     // Insert at the beginning of body
     document.body.insertBefore(controlPanel, document.body.firstChild);
-    
+
     // Add mouse hover event to prevent UI from fading when hovered
     controlPanel.addEventListener('mouseenter', () => {
       setUIOpacity(1);
       clearTimeout(uiFadeTimer);
     });
-    
+
     controlPanel.addEventListener('mouseleave', () => {
       resetUIFadeTimer();
     });
-    
+
     // Set up UI fade timer
     resetUIFadeTimer();
-    
+
     uiVisible = true;
   }
 
@@ -343,12 +345,12 @@
     if (controlPanel) {
       // Animate out
       controlPanel.style.opacity = '0';
-      
+
       // Remove after animation completes
       setTimeout(() => {
         controlPanel.style.display = 'none';
       }, 300);
-      
+
       uiVisible = false;
     }
   }
@@ -366,13 +368,13 @@
   function updateColorScheme() {
     if (controlPanel) {
       const colors = getColorScheme();
-      
+
       // Update main panel
       controlPanel.style.background = colors.background;
       controlPanel.style.color = colors.text;
       controlPanel.style.borderBottom = `1px solid ${colors.border}`;
       controlPanel.style.boxShadow = `0 2px 5px ${colors.shadow}`;
-      
+
       // Update buttons
       const buttons = controlPanel.querySelectorAll('button');
       buttons.forEach(button => {
@@ -380,7 +382,7 @@
         button.style.color = colors.buttonText;
         button.style.border = `1px solid ${colors.border}`;
       });
-      
+
       // Update kbd elements
       const kbdElements = controlPanel.querySelectorAll('kbd');
       kbdElements.forEach(kbd => {
@@ -397,18 +399,18 @@
       sendResponse({ success: true });
       return false; // Not using asynchronous response
     }
-    
+
     // Reset fade timer for any message action
     resetUIFadeTimer();
-    
+
     // Always show the control panel when receiving keyboard shortcut messages
-    if (message.action === 'toggleTeleprompter' || 
-        message.action === 'increase-speed' || 
-        message.action === 'decrease-speed') {
+    if (message.action === 'toggleTeleprompter' ||
+      message.action === 'increase-speed' ||
+      message.action === 'decrease-speed') {
       // Make sure UI is visible when shortcuts are used
       createControlPanel();
     }
-    
+
     if (message.action === 'toggleTeleprompter') {
       // Simply toggle scrolling with one press
       toggleScrolling();
@@ -425,7 +427,7 @@
       toggleControlPanelVisibility();
       sendResponse({ success: true });
     }
-    
+
     return false; // We've handled the response synchronously
   });
 
@@ -440,21 +442,26 @@
   });
 
   // Keyboard event listener - ensure UI is shown when shortcuts are used
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function (e) {
     // Reset fade timer on any keypress
     resetUIFadeTimer();
-    
+
     // Check for our keyboard shortcuts
     if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
       if (e.key === 'p' || e.key === 'P') {
-        // Make sure UI is visible
+        // Make sure UI is visible and toggle scrolling
         createControlPanel();
+        toggleScrolling();
       } else if (e.key === 'ArrowUp') {
-        // Make sure UI is visible
+        // Make sure UI is visible and increase speed
         createControlPanel();
+        scrollState.speedMultiplier = Math.min(scrollState.speedMultiplier + 0.25, 3);
+        updateSpeedDisplay();
       } else if (e.key === 'ArrowDown') {
-        // Make sure UI is visible
+        // Make sure UI is visible and decrease speed
         createControlPanel();
+        scrollState.speedMultiplier = Math.max(scrollState.speedMultiplier - 0.25, 0.25);
+        updateSpeedDisplay();
       }
     }
   });
